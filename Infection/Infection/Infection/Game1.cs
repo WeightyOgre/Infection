@@ -21,6 +21,8 @@ namespace Infection
         
         Person anotherPerson;
 
+        TextDisplay debugText;
+
         public Game1()
         {
             graphics = new GraphicsDeviceManager(this);
@@ -31,9 +33,13 @@ namespace Infection
         protected override void Initialize()
         {
             // TODO: Add your initialization logic here
-            aPerson = new Person(new Vector2(0,0),new Vector2(0,0), Content.Load<Texture2D>("Person27x27"));
+            aPerson = new Person(new Vector2(300,300),new Vector2(0,0), Content.Load<Texture2D>("Person27x27"));
 
             anotherPerson = new Person(new Vector2(100, 100), new Vector2(0, 0), Content.Load<Texture2D>("InfectedPerson27x27"));
+
+            debugText = new TextDisplay(this.Content, "test", new Vector2(0,0));
+
+            this.IsMouseVisible = true;
 
             base.Initialize();
         }
@@ -102,13 +108,59 @@ namespace Infection
 
             updateRotation();
 
-            updateAnotherPerson();
+            updateDistanceText();
+
+            if (Vector2.Distance(aPerson.Position, anotherPerson.Position) >= 150)
+            {
+                updateAnotherPerson();
+                anotherPerson.Texture = Content.Load<Texture2D>("InfectedPerson27x27");
+                debugText.stringValue += " Watching!";
+            }
+            if (Vector2.Distance(aPerson.Position, anotherPerson.Position) <= 50 && Vector2.Distance(aPerson.Position, anotherPerson.Position) >2.0)
+            {
+                updateAnotherPerson();
+                anotherPerson.Texture = Content.Load<Texture2D>("InfectedPerson27x27Moving");
+                MoveAnotherPerson(2.5f);
+                debugText.stringValue += " Frenzied!";
+            }
+            if (Vector2.Distance(aPerson.Position, anotherPerson.Position) < 2.0)
+            {
+                anotherPerson.Texture = Content.Load<Texture2D>("InfectedPerson27x27");
+                debugText.stringValue += " caught!";
+            }
+            if (Vector2.Distance(aPerson.Position, anotherPerson.Position) <= 150 && Vector2.Distance(aPerson.Position, anotherPerson.Position) >= 50)
+            {
+                updateAnotherPerson();
+                anotherPerson.Texture = Content.Load<Texture2D>("InfectedPerson27x27Moving");
+                MoveAnotherPerson(1.0f);
+                debugText.stringValue += " Running!";
+            }
+
+            updateAPerson();
+
+                MouseState mouseState;
+                mouseState = Mouse.GetState();
+                if (mouseState.LeftButton == ButtonState.Pressed)
+                {
+                    aPerson.Texture = Content.Load<Texture2D>("Person27x27Moving");
+                    MoveEntity(2.0f);
+                }
+                else
+                {
+                    aPerson.Texture = Content.Load<Texture2D>("Person27x27");
+                }
 
             base.Update(gameTime);
         }
 
+        public void updateDistanceText()
+        {
+            debugText.stringValue = Convert.ToString(Vector2.Distance(aPerson.Position, anotherPerson.Position));
+        }
+
         public void updateAnotherPerson()
         {
+
                 float deltaX = (aPerson.XPosition) - (anotherPerson.XPosition);
                 float deltaY = (aPerson.YPosition) - (anotherPerson.YPosition);
 
@@ -116,6 +168,50 @@ namespace Infection
                 anotherPerson.Rotation = angle;
                 float offSet = (90.0f / 360) * MathHelper.Pi*2;
                 anotherPerson.Rotation += offSet;
+
+                //MathHelper.ToDegrees(f);
+                //MathHelper.ToRadians(f);
+        }
+
+        //http://gamedev.stackexchange.com/questions/50793/moving-a-sprite-in-the-direction-its-facing-xna
+        public void MoveEntity(float speed)
+        {
+            float offSet = (90.0f / 360) * MathHelper.Pi * 2;
+            aPerson.Rotation -= offSet;
+            Vector2 direction = new Vector2((float)Math.Cos(aPerson.Rotation),
+                                            (float)Math.Sin(aPerson.Rotation));
+            
+            direction.Normalize();
+            aPerson.Position += direction * speed;
+            //float offSet = (90.0f / 360) * MathHelper.Pi * 2;
+            //aPerson.Rotation += offSet;
+        }
+
+        public void MoveAnotherPerson(float speed)
+        {
+            float offSet = (90.0f / 360) * MathHelper.Pi * 2;
+            anotherPerson.Rotation -= offSet;
+            Vector2 direction = new Vector2((float)Math.Cos(anotherPerson.Rotation),
+                                            (float)Math.Sin(anotherPerson.Rotation));
+
+            direction.Normalize();
+            anotherPerson.Position += direction * speed;
+            //float offSet = (90.0f / 360) * MathHelper.Pi * 2;
+            //aPerson.Rotation += offSet;
+        }
+
+        public void updateAPerson()
+        {
+            MouseState mouseState;
+            mouseState = Mouse.GetState();
+
+            float deltaX = (mouseState.X) - (aPerson.XPosition);
+            float deltaY = (mouseState.Y) - (aPerson.YPosition);
+
+            float angle = (float)Math.Atan2(deltaY, deltaX);
+            aPerson.Rotation = angle;
+            float offSet = (90.0f / 360) * MathHelper.Pi * 2;
+            aPerson.Rotation += offSet;
         }
 
         public void updateRotation()
@@ -141,6 +237,10 @@ namespace Infection
             spriteBatch.Draw(aPerson.Texture, aPerson.Position, null, Color.White, aPerson.Rotation, origin, aPerson.Scale, SpriteEffects.None, 0f);
             spriteBatch.Draw(anotherPerson.Texture, anotherPerson.Position, null, Color.White, anotherPerson.Rotation, origin, anotherPerson.Scale, SpriteEffects.None, 0f);
             spriteBatch.End();
+
+            SpriteBatch fontBatch = new SpriteBatch(GraphicsDevice);
+
+            debugText.DrawFont(fontBatch);
 
             base.Draw(gameTime);
         }
