@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Infection
 {
-    class Person
+    public class Person
     {
 
         //texture/destination/source/color/rotation/origin/scale/sprite effect/layer
@@ -20,6 +20,12 @@ namespace Infection
         public float rotation;
 
         public float scale;
+
+        public Texture2D PersonTexture
+        {
+            get { return personTexture; }
+            set { personTexture = value; }
+        }
 
         public float Scale
         {
@@ -57,20 +63,13 @@ namespace Infection
             set { speed = value; }
         }
 
-        public Texture2D Texture
-        {
-            get { return personTexture; }
-            set { personTexture = value; }
-        }
-
-
-        public Person(Vector2 position, Vector2 speed, Texture2D personTexture)
+        public Person(Vector2 position, Vector2 speed)
         {
             this.position = position;
             this.speed = speed;
-            this.personTexture = personTexture;
             rotation = 0f;
             scale = 1f;
         }
+
     }
 }
