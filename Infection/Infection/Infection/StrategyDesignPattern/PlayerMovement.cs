@@ -10,7 +10,7 @@ namespace Infection.StrategyDesignPattern
     class PlayerMovement : Movement
     {
 
-        private float Speed = 1.0f;
+        private float Speed = 1.5f;
 
         public override float UpdateRotation(float targetX, float targetY, float entityX, float entityY)
         {
