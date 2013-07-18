@@ -5,12 +5,11 @@ using System.Text;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Infection
+namespace Infection.StrategyDesignPattern
 {
-    public class Person
+    public class StrategyPattern
     {
-
-        //texture/destination/source/color/rotation/origin/scale/sprite effect/layer
+        Person character;
 
         public Vector2 position;
         public Vector2 speed;
@@ -20,6 +19,36 @@ namespace Infection
         public float rotation;
 
         public float scale;
+
+        public StrategyPattern(Vector2 position, Vector2 speed)
+        {
+            this.position = position;
+            this.speed = speed;
+            rotation = 0f;
+            scale = 1f;
+        }
+
+        public void AddPlayerMovement()
+        {
+            character = new Infection.StrategyDesignPattern.Person(new PlayerMovement());
+        }
+
+        public void AddAIMovement()
+        {
+            character = new Infection.StrategyDesignPattern.Person(new AIMovement());
+        }
+
+        public void UpdateRotation(float targetX, float targetY)
+        {
+
+            Rotation = character.UpdateRotation(targetX, targetY, Position.X, Position.Y);
+        }
+
+        public void UpdateMovement()
+        {
+            Rotation = character.CorrectRoation(Rotation);
+            Position = character.UpdateMovement(position, rotation, speed);
+        }
 
         public Texture2D PersonTexture
         {
@@ -61,14 +90,6 @@ namespace Infection
         {
             get { return speed; }
             set { speed = value; }
-        }
-
-        public Person(Vector2 position, Vector2 speed)
-        {
-            this.position = position;
-            this.speed = speed;
-            rotation = 0f;
-            scale = 1f;
         }
 
     }

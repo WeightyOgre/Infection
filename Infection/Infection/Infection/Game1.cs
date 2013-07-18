@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework.GamerServices;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
+using Infection.StrategyDesignPattern;
 
 namespace Infection
 {
@@ -17,11 +18,13 @@ namespace Infection
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
 
-        Person aPerson;
-        
-        Person anotherPerson;
+        StrategyPattern aPerson;
 
+        StrategyPattern AIPerson;
+        
         GameArt ArtAssets;
+
+        //TextDisplay debugText;
 
         public Game1()
         {
@@ -34,11 +37,17 @@ namespace Infection
         {
 
             ArtAssets = new GameArt(this.Content);
+
+            aPerson = new StrategyPattern(new Vector2(400, 200), new Vector2(0, 0));
+            aPerson.AddPlayerMovement();
+            aPerson.PersonTexture = ArtAssets.PersonTexture;
+
+            AIPerson = new StrategyPattern(new Vector2(200, 300), new Vector2(0, 0));
+            AIPerson.AddAIMovement();
+            AIPerson.PersonTexture = ArtAssets.InfectedPersonTexture;
+
+            //debugText = new TextDisplay(this.Content, "test", new Vector2(0,350));
             
-            aPerson = new Person(new Vector2(300,300),new Vector2(0,0));
-
-            anotherPerson = new Person(new Vector2(100, 100), new Vector2(0, 0));
-
             this.IsMouseVisible = true;
 
             base.Initialize();
@@ -59,103 +68,76 @@ namespace Infection
 
         protected override void Update(GameTime gameTime)
         {
-            KeyboardState currentKeyboardState;
-            currentKeyboardState = Keyboard.GetState();
+            //debugText.stringValue = Convert.ToString(Vector2.Distance(aPerson.Position, AIPerson.Position));
+            UpdatePlayer();
+            UpdateAI();
+            
+            base.Update(gameTime);
+        }
 
+        public void UpdateAI()
+        {
+            //ai
+            if (Vector2.Distance(aPerson.Position, AIPerson.Position) >= 150)
+            {
+                
+                AIPerson.UpdateRotation(aPerson.Position.X, aPerson.Position.Y);
+                AIPerson.PersonTexture = ArtAssets.InfectedPersonTexture;
+
+            }
+            if (Vector2.Distance(aPerson.Position, AIPerson.Position) <= 50 && Vector2.Distance(aPerson.Position, AIPerson.Position) > 2.0)
+            {
+                AIPerson.UpdateRotation(aPerson.Position.X, aPerson.Position.Y);
+                AIPerson.PersonTexture = ArtAssets.InfectedPersonTextureMoving;
+                AIPerson.UpdateMovement();
+
+            }
+            if (Vector2.Distance(aPerson.Position, AIPerson.Position) < 2.0)
+            {
+                AIPerson.PersonTexture = ArtAssets.InfectedPersonTexture;
+
+            }
+            if (Vector2.Distance(aPerson.Position, AIPerson.Position) <= 150 && Vector2.Distance(aPerson.Position, AIPerson.Position) >= 50)
+            {
+                AIPerson.UpdateRotation(aPerson.Position.X, aPerson.Position.Y);
+                AIPerson.PersonTexture = ArtAssets.InfectedPersonTextureMoving;
+                AIPerson.UpdateMovement();
+            }
+        }
+
+        public void UpdatePlayer()
+        {
             MouseState mouseState;
             mouseState = Mouse.GetState();
 
-            if (Vector2.Distance(aPerson.Position, anotherPerson.Position) >= 150)
-            {
-                updateAnotherPerson();
-                anotherPerson.PersonTexture = ArtAssets.InfectedPersonTexture;
-
-            }
-            if (Vector2.Distance(aPerson.Position, anotherPerson.Position) <= 50 && Vector2.Distance(aPerson.Position, anotherPerson.Position) >2.0)
-            {
-                updateAnotherPerson();
-                anotherPerson.PersonTexture = ArtAssets.InfectedPersonTextureMoving;
-                MoveEntity(2.5f, anotherPerson);
-
-            }
-            if (Vector2.Distance(aPerson.Position, anotherPerson.Position) < 2.0)
-            {
-                anotherPerson.PersonTexture = ArtAssets.InfectedPersonTexture;
-
-            }
-            if (Vector2.Distance(aPerson.Position, anotherPerson.Position) <= 150 && Vector2.Distance(aPerson.Position, anotherPerson.Position) >= 50)
-            {
-                updateAnotherPerson();
-                anotherPerson.PersonTexture = ArtAssets.InfectedPersonTextureMoving;
-                MoveEntity(1.0f, anotherPerson);
-            }
-
-            updateAPerson();
+            aPerson.UpdateRotation(mouseState.X, mouseState.Y);
 
             if (mouseState.LeftButton == ButtonState.Pressed)
             {
                 aPerson.PersonTexture = ArtAssets.PersonTextureMoving;
-                MoveEntity(2.0f, aPerson);
+                aPerson.UpdateMovement();
             }
             else
             {
                 aPerson.PersonTexture = ArtAssets.PersonTexture;
             }
-
-            base.Update(gameTime);
-        }
-
-        public void updateAnotherPerson()
-        {
-
-                float deltaX = (aPerson.XPosition) - (anotherPerson.XPosition);
-                float deltaY = (aPerson.YPosition) - (anotherPerson.YPosition);
-
-                float angle = (float)Math.Atan2(deltaY, deltaX);
-                anotherPerson.Rotation = angle;
-                float offSet = (90.0f / 360) * MathHelper.Pi*2;
-                anotherPerson.Rotation += offSet;
-
-                //MathHelper.ToDegrees(f);
-                //MathHelper.ToRadians(f);
-        }
-
-        //http://gamedev.stackexchange.com/questions/50793/moving-a-sprite-in-the-direction-its-facing-xna
-        public void MoveEntity(float speed, Person person)
-        {
-            float offSet = (90.0f / 360) * MathHelper.Pi * 2;
-            person.Rotation -= offSet;
-            Vector2 direction = new Vector2((float)Math.Cos(person.Rotation),
-                                            (float)Math.Sin(person.Rotation));
-            
-            direction.Normalize();
-            person.Position += direction * speed;
-        }
-
-        public void updateAPerson()
-        {
-            MouseState mouseState;
-            mouseState = Mouse.GetState();
-
-            float deltaX = (mouseState.X) - (aPerson.XPosition);
-            float deltaY = (mouseState.Y) - (aPerson.YPosition);
-
-            float angle = (float)Math.Atan2(deltaY, deltaX);
-            aPerson.Rotation = angle;
-            float offSet = (90.0f / 360) * MathHelper.Pi * 2;
-            aPerson.Rotation += offSet;
         }
 
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
-            // TODO: Add your drawing code here
             spriteBatch.Begin();
             Vector2 origin = new Vector2(aPerson.PersonTexture.Width/2, aPerson.PersonTexture.Height/2);
             spriteBatch.Draw(aPerson.PersonTexture, aPerson.Position, null, Color.White, aPerson.Rotation, origin, aPerson.Scale, SpriteEffects.None, 0f);
-            spriteBatch.Draw(anotherPerson.PersonTexture, anotherPerson.Position, null, Color.White, anotherPerson.Rotation, origin, anotherPerson.Scale, SpriteEffects.None, 0f);
+            spriteBatch.Draw(AIPerson.PersonTexture, AIPerson.Position, null, Color.White, AIPerson.Rotation, origin, AIPerson.Scale, SpriteEffects.None, 0f);
+
             spriteBatch.End();
+
+            //SpriteBatch fontBatch = new SpriteBatch(GraphicsDevice);
+
+            //debugText.DrawFont(fontBatch);
+
 
             base.Draw(gameTime);
         }
