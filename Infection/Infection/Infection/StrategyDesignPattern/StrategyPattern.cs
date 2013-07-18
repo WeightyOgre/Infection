@@ -20,12 +20,20 @@ namespace Infection.StrategyDesignPattern
 
         public float scale;
 
+        public bool isInfected;
+
+        public Vector2 destination;
+
+        public bool isDestinationSet;
+
         public StrategyPattern(Vector2 position, Vector2 speed)
         {
             this.position = position;
             this.speed = speed;
             rotation = 0f;
             scale = 1f;
+            isInfected = false;
+            isDestinationSet = false;
         }
 
         public void AddPlayerMovement()
@@ -38,16 +46,33 @@ namespace Infection.StrategyDesignPattern
             character = new Infection.StrategyDesignPattern.Person(new AIMovement());
         }
 
+        public void AddAINotInfectedMovement()
+        {
+            character = new Infection.StrategyDesignPattern.Person(new AINotInfectedMovement());
+        }
+
         public void UpdateRotation(float targetX, float targetY)
         {
 
             Rotation = character.UpdateRotation(targetX, targetY, Position.X, Position.Y);
         }
 
-        public void UpdateMovement()
+        public void UpdateNotInfectedMovement(float targetX, float targetY)
         {
             Rotation = character.CorrectRoation(Rotation);
             Position = character.UpdateMovement(position, rotation, speed);
+        }
+
+        public void UpdateInfectedMovement()
+        {
+            Rotation = character.CorrectRoation(Rotation);
+            Position = character.UpdateMovement(position, rotation, speed);
+        }
+
+        public void setDestination(float targetX, float targetY)
+        {
+            destination.X = targetX;
+            destination.Y = targetY;
         }
 
         public Texture2D PersonTexture
@@ -90,6 +115,24 @@ namespace Infection.StrategyDesignPattern
         {
             get { return speed; }
             set { speed = value; }
+        }
+
+        public bool IsInfected
+        {
+            get { return isInfected; }
+            set { isInfected = value; }
+        }
+
+        public Vector2 Destination
+        {
+            get { return destination; }
+            set { destination = value; }
+        }
+
+        public bool IsDestinationSet
+        {
+            get { return isDestinationSet; }
+            set { isDestinationSet = value; }
         }
 
     }

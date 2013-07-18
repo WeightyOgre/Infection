@@ -6,9 +6,10 @@ using Microsoft.Xna.Framework;
 
 namespace Infection.StrategyDesignPattern
 {
-    class AIMovement : Movement
+    class AINotInfectedMovement : Movement
     {
-        private float Speed = 2.0f;
+
+        private float Speed = 1.0f;
 
         public override float UpdateRotation(float targetX, float targetY, float entityX, float entityY)
         {
@@ -38,6 +39,5 @@ namespace Infection.StrategyDesignPattern
             float offSet = (90.0f / 360) * MathHelper.Pi * 2;
             return rotation -= offSet;
         }
-
     }
 }

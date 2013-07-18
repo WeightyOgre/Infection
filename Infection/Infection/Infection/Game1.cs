@@ -22,11 +22,15 @@ namespace Infection
         
         GameArt ArtAssets;
 
-        //TextDisplay debugText;
+        TextDisplay debugText;
 
         public List<StrategyPattern> AIPeople;
 
         Random randomNumber;
+
+        Color aColor;
+
+        int minTime;
 
         public Game1()
         {
@@ -52,8 +56,17 @@ namespace Infection
             AddAI();
             AddAI();
             AddAI();
-            //debugText = new TextDisplay(this.Content, "test", new Vector2(0,350));
-            
+            AddAI();
+            AddAI();
+            AddAI();
+            AddAI();
+            AddAI();
+            AddAI();
+            debugText = new TextDisplay(this.Content, "test", new Vector2(0,350));
+
+            aColor = new Color();
+            minTime = 30;
+
             this.IsMouseVisible = true;
 
             base.Initialize();
@@ -74,42 +87,77 @@ namespace Infection
 
         protected override void Update(GameTime gameTime)
         {
-            //debugText.stringValue = Convert.ToString(Vector2.Distance(aPerson.Position, AIPerson.Position));
+            debugText.stringValue = Convert.ToString(gameTime.TotalGameTime);
+
             UpdatePlayer();
+
             for (int i = AIPeople.Count - 1; i >= 0; i--)
             {
-                UpdateAI(i);
+                UpdateAI(i, gameTime);
             }
+
             base.Update(gameTime);
         }
 
-        public void UpdateAI(int i)
+        public void UpdateAI(int i, GameTime gameTime)
         {
-            //ai
-            if (Vector2.Distance(AIPeople[i].Position, aPerson.Position) >= 150)
+            if ((int)gameTime.TotalGameTime.TotalSeconds < minTime)
             {
-
-                AIPeople[i].UpdateRotation(aPerson.Position.X, aPerson.Position.Y);
-                AIPeople[i].PersonTexture = ArtAssets.InfectedPersonTexture;
+                AIPeople[i].IsInfected = false;
+            }
+            else
+            {
+                AIPeople[i].IsInfected = true;
+                AIPeople[i].AddAIMovement();
 
             }
-            if (Vector2.Distance(aPerson.Position, AIPeople[i].Position) <= 50 && Vector2.Distance(aPerson.Position, AIPeople[i].Position) > 2.0)
+            if (AIPeople[i].IsInfected)
             {
-                AIPeople[i].UpdateRotation(aPerson.Position.X, aPerson.Position.Y);
-                AIPeople[i].PersonTexture = ArtAssets.InfectedPersonTextureMoving;
-                AIPeople[i].UpdateMovement();
+                //ai
+                if (Vector2.Distance(AIPeople[i].Position, aPerson.Position) >= 150)
+                {
 
-            }
-            if (Vector2.Distance(aPerson.Position, AIPeople[i].Position) < 2.0)
-            {
-                AIPeople[i].PersonTexture = ArtAssets.InfectedPersonTexture;
+                    AIPeople[i].UpdateRotation(aPerson.Position.X, aPerson.Position.Y);
+                    AIPeople[i].PersonTexture = ArtAssets.InfectedPersonTexture;
 
+                }
+                if (Vector2.Distance(aPerson.Position, AIPeople[i].Position) <= 50 && Vector2.Distance(aPerson.Position, AIPeople[i].Position) > 2.0)
+                {
+                    AIPeople[i].UpdateRotation(aPerson.Position.X, aPerson.Position.Y);
+                    AIPeople[i].PersonTexture = ArtAssets.InfectedPersonTextureMoving;
+                    AIPeople[i].UpdateInfectedMovement();
+
+                }
+                if (Vector2.Distance(aPerson.Position, AIPeople[i].Position) < 2.0)
+                {
+                    AIPeople[i].PersonTexture = ArtAssets.InfectedPersonTexture;
+
+                }
+                if (Vector2.Distance(aPerson.Position, AIPeople[i].Position) <= 150 && Vector2.Distance(aPerson.Position, AIPeople[i].Position) >= 50)
+                {
+                    AIPeople[i].UpdateRotation(aPerson.Position.X, aPerson.Position.Y);
+                    AIPeople[i].PersonTexture = ArtAssets.InfectedPersonTextureMoving;
+                    AIPeople[i].UpdateInfectedMovement();
+                }
             }
-            if (Vector2.Distance(aPerson.Position, AIPeople[i].Position) <= 150 && Vector2.Distance(aPerson.Position, AIPeople[i].Position) >= 50)
+
+            if (!AIPeople[i].IsInfected)
             {
-                AIPeople[i].UpdateRotation(aPerson.Position.X, aPerson.Position.Y);
-                AIPeople[i].PersonTexture = ArtAssets.InfectedPersonTextureMoving;
-                AIPeople[i].UpdateMovement();
+                AIPeople[i].PersonTexture = ArtAssets.PersonTextureMoving;
+                if (!AIPeople[i].IsDestinationSet)
+                {
+                    AIPeople[i].setDestination(randomNumberGenerator(GraphicsDevice.Viewport.Width), randomNumberGenerator(GraphicsDevice.Viewport.Height));
+                    AIPeople[i].IsDestinationSet = true;
+                }
+                if (Vector2.Distance(AIPeople[i].Position,AIPeople[i].Destination) <2.0)
+                {
+                    AIPeople[i].IsDestinationSet = false;
+                }
+                if (AIPeople[i].IsDestinationSet)
+                {
+                    AIPeople[i].UpdateRotation(AIPeople[i].Destination.X, AIPeople[i].Destination.Y);
+                    AIPeople[i].UpdateInfectedMovement();
+                }
             }
         }
 
@@ -123,7 +171,7 @@ namespace Infection
             if (mouseState.LeftButton == ButtonState.Pressed)
             {
                 aPerson.PersonTexture = ArtAssets.PersonTextureMoving;
-                aPerson.UpdateMovement();
+                aPerson.UpdateInfectedMovement();
             }
             else
             {
@@ -134,7 +182,7 @@ namespace Infection
         public void AddAI()
         {
             StrategyPattern aiPerson = new StrategyPattern(new Vector2(randomNumberGenerator(GraphicsDevice.Viewport.Width), randomNumberGenerator(GraphicsDevice.Viewport.Height)), new Vector2(0, 0));
-            aiPerson.AddAIMovement();
+            aiPerson.AddAINotInfectedMovement();
             aiPerson.PersonTexture = ArtAssets.InfectedPersonTexture;
             AIPeople.Add(aiPerson);
         }
@@ -146,7 +194,7 @@ namespace Infection
 
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
+            GraphicsDevice.Clear(aColor);
 
             spriteBatch.Begin();
             Vector2 origin = new Vector2(aPerson.PersonTexture.Width/2, aPerson.PersonTexture.Height/2);
@@ -157,9 +205,9 @@ namespace Infection
             }
             spriteBatch.End();
 
-            //SpriteBatch fontBatch = new SpriteBatch(GraphicsDevice);
+            SpriteBatch fontBatch = new SpriteBatch(GraphicsDevice);
 
-            //debugText.DrawFont(fontBatch);
+            debugText.DrawFont(fontBatch);
 
 
             base.Draw(gameTime);
